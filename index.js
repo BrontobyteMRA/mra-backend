@@ -124,7 +124,7 @@ app.get('/api/getRoute/:route', async (req, res) => {
             return res.status(404).json({ error: 'Route not found for the specified route' });
         }
 
-        res.status(200).json({ routes });
+        res.status(200).json({ meters: routes });
     } catch (error) {
         console.error('Error getting route:', error);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
