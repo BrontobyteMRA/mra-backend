@@ -135,22 +135,23 @@ app.get('/api/getAccountDetails/:accNr', async (req, res) => {
 app.post('/api/updateReadings/:mtNr', async (req, res) => {
     try {
         const mtNr = req.params.mtNr;
-        const kva = req.body.kva;
-        const kwh = req.body.kwh;
+        // const kva = req.body.kva;
+        const currentKwh = req.body.currentKwh;
         const account = await MeterReading.findOne({ 'MtNr': Number(mtNr), 'MetType': "ME01" });
         if (!account || account.length === 0) {
             return res.status(404).json({ error: 'No account found for the specified account number' });
         }
-        if (account) {
-            const newCurrRead = account.PrevRead + kwh;
+        if (account && currentKwh > account.CurrRead) {
+            const MtrConsumption = currentKwh - account.CurrRead;
             const result = await MeterReading.findOneAndUpdate(
                 { 'MtNr': Number(mtNr), 'MetType': "ME01" },
-                { $set: { 'CurrRead': newCurrRead } }, { new: true }
-
+                { $set: { 'CurrRead': currentKwh, 'PrevRead': account.CurrRead, 'Consumption': MtrConsumption } }, { new: true }
             );
             return res.status(200).json({ accounts: result });
+        } else {
+            return res.status(422).json({ message: 'Invalid KWh' });
         }
-        res.status(200).json({ account: account });
+        // res.status(200).json({ account: account });
     } catch (error) {
         console.error('Error getting accounts:', error);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
