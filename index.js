@@ -132,9 +132,10 @@ app.get('/api/getAccountDetails/:accNr', async (req, res) => {
     }
 });
 
-app.post('/api/updateReadings/:mtNr', async (req, res) => {
+
+app.post('/api/updateReadings', async (req, res) => {
     try {
-        const mtNr = req.params.mtNr;
+        const mtNr = req.body.mtNr;
         // const kva = req.body.kva;
         const currentKwh = req.body.currentKwh;
         const account = await MeterReading.findOne({ 'MtNr': Number(mtNr), 'MetType': "ME01" });
@@ -149,7 +150,7 @@ app.post('/api/updateReadings/:mtNr', async (req, res) => {
             );
             return res.status(200).json({ accounts: result });
         } else {
-            return res.status(422).json({ message: 'Invalid KWh' });
+            return res.status(422).json({ accounts: {} });
         }
         // res.status(200).json({ account: account });
     } catch (error) {
