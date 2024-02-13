@@ -22,21 +22,6 @@ const mongoDBAtlasIP = 'mongodb+srv://mubashirhussain:ZNbjJ8gy1SHvPFEU@cluster0.
 
 mongoose.connect(`${mongoDBAtlasIP}brontobyteDB`);
 
-// const client = new MongoClient('mongodb+srv://mubashirhussain:ZNbjJ8gy1SHvPFEU@cluster0.a1bvhv9.mongodb.net/?retryWrites=true&w=majority');
-
-// The connect() method does not attempt a connection; instead it instructs
-// the driver to connect using the settings provided when a connection
-// is required.
-// await client.connect();
-
-// const dbName = "brontobyteDB";
-// const collectionName = "brontobyte";
-
-// const database = client.db(dbName);
-// const collection = database.collection(collectionName);
-
-
-
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
@@ -47,56 +32,56 @@ const meterReadingSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    'Acc Nr': {
+    AccNr: {
         type: Number,
         required: true
     },
-    'Met Type': {
+    MetType: {
         type: String,
         enum: ['ME01', 'ME03'],
         required: true
     },
-    'Seq No': {
+    SeqNo: {
         type: Number,
         required: true
     },
-    'MtNr': {
+    MtNr: {
         type: Number,
         required: true
     },
-    'Curr Read': {
+    CurrRead: {
         type: Number,
         required: true
     },
-    'Prev Read': {
+    PrevRead: {
         type: Number,
         required: true
     },
-    'Acc Name': {
+    AccName: {
         type: String,
         required: true
     },
-    'Address': {
+    Address: {
         type: String,
         required: true
     },
-    'Pre-Dec': {
+    PreDec: {
         type: Number,
         required: true
     },
-    'Post-Dec': {
+    PostDec: {
         type: Number,
         required: true
     },
-    'Bill Factor': {
+    BillFactor: {
         type: Number,
         required: true
     },
-    'Resettable': {
+    Resettable: {
         type: Boolean,
         required: false
     },
-    'Consumption': {
+    Consumption: {
         type: Number,
         required: true
     }
@@ -147,16 +132,25 @@ app.get('/api/getAccountDetails/:accNr', async (req, res) => {
     }
 });
 
-app.post('/api/getAccountDetails/:mtNr', async (req, res) => {
+app.post('/api/updateReadings/:mtNr', async (req, res) => {
     try {
         const mtNr = req.params.mtNr;
-        const accounts = await MeterReading.find({ 'MtNr': Number(mtNr) });
-
-        if (!accounts || accounts.length === 0) {
-            return res.status(404).json({ error: 'No accounts found for the specified account number' });
+        const kva = req.body.kva;
+        const kwh = req.body.kwh;
+        const account = await MeterReading.findOne({ 'MtNr': Number(mtNr), 'MetType': "ME01" });
+        if (!account || account.length === 0) {
+            return res.status(404).json({ error: 'No account found for the specified account number' });
         }
+        if (account) {
+            const newCurrRead = account.PrevRead + kwh;
+            const result = await MeterReading.findOneAndUpdate(
+                { 'MtNr': Number(mtNr), 'MetType': "ME01" },
+                { $set: { 'CurrRead': newCurrRead } }, { new: true }
 
-        res.status(200).json({ accounts });
+            );
+            return res.status(200).json({ accounts: result });
+        }
+        res.status(200).json({ account: account });
     } catch (error) {
         console.error('Error getting accounts:', error);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
