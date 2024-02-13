@@ -110,7 +110,7 @@ app.get('/api/getRoute/:route', async (req, res) => {
         const routes = await MeterReading.find({ Routes: route });
 
         if (!routes) {
-            return res.status(404).json({ error: 'Route not found for the specified route' });
+            return res.status(404).json({ message: 'Route not found for the specified route' });
         }
 
         res.status(200).json({ meters: routes });
@@ -126,7 +126,7 @@ app.get('/api/getAccountDetails/:accNr', async (req, res) => {
         const accounts = await MeterReading.find({ 'AccNr': Number(accNr) });
 
         if (!accounts || accounts.length === 0) {
-            return res.status(404).json({ error: 'No accounts found for the specified account number' });
+            return res.status(404).json({ message: 'No accounts found for the specified account number' });
         }
 
         res.status(200).json({ accounts });
@@ -145,7 +145,7 @@ app.post('/api/updateReadings', async (req, res) => {
         if (currentKva == undefined) {
             const account = await MeterReading.findOne({ 'MtNr': Number(mtNr), 'MetType': "ME01" });
             if (!account || account.length === 0) {
-                return res.status(404).json({ error: 'No account found for the specified account number' });
+                return res.status(404).json({ message: 'No account found for the specified account number' });
             }
             if (account && currentKwh > account.CurrRead) {
                 const MtrConsumption = currentKwh - account.CurrRead;
@@ -153,14 +153,15 @@ app.post('/api/updateReadings', async (req, res) => {
                     { 'MtNr': Number(mtNr), 'MetType': "ME01" },
                     { $set: { 'CurrRead': currentKwh, 'PrevRead': account.CurrRead, 'Consumption': MtrConsumption } }, { new: true }
                 );
-                return res.status(200).json({ account: result });
+                const updatedAccounts = await MeterReading.find({ 'MtNr': Number(mtNr), 'MetType': "ME01" });
+                return res.status(200).json({ accounts: updatedAccounts });
             } else {
-                return res.status(422).json({ account: {} });
+                return res.status(422).json({ accounts: {}, message: "Current Kwh is less than previous Kwh" });
             }
         } else if (currentKva != undefined) {
             const accounts = await MeterReading.find({ 'MtNr': Number(mtNr) });
             if (!accounts || accounts.length === 0) {
-                return res.status(404).json({ error: 'No account found for the specified account number' });
+                return res.status(404).json({ message: 'No account found for the specified account number' });
             }
             try {
                 if (accounts && currentKwh > accounts[0].CurrRead) {
