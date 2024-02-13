@@ -159,3 +159,26 @@ app.post('/api/updateReadings', async (req, res) => {
     }
 });
 
+app.post('/api/submitReadings', async (req, res) => {
+    try {
+        const mtNr = req.body.mtNr;
+        // const kva = req.body.kva;
+        const account = await MeterReading.findOne({ 'MtNr': Number(mtNr) });
+        if (!account || account.length === 0) {
+            return res.status(404).json({ error: 'No account found for the specified account number' });
+        }
+        if (account) {
+            const result = await MeterReading.findOneAndUpdate(
+                { 'MtNr': Number(mtNr) },
+                { $set: { 'isSubmitted': true } }, { new: true }
+            );
+            return res.status(200).json({ sucess: result ? true : false });
+        } else {
+            return res.status(422).json({ accounts: {} });
+        }
+        // res.status(200).json({ account: account });
+    } catch (error) {
+        console.error('Error getting accounts:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
