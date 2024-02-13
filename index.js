@@ -172,7 +172,7 @@ app.post('/api/submitReadings', async (req, res) => {
                 { 'MtNr': Number(mtNr) },
                 { $set: { 'isSubmitted': true } }, { new: true }
             );
-            return res.status(200).json({ sucess: result ? true : false });
+            return res.status(200).json({ success: result ? true : false });
         } else {
             return res.status(422).json({ accounts: {} });
         }
