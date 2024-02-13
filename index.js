@@ -200,7 +200,7 @@ app.post('/api/submitReadings', async (req, res) => {
             return res.status(404).json({ error: 'No account found for the specified account number' });
         }
         if (account) {
-            const result = await MeterReading.findOneAndUpdate(
+            const result = await MeterReading.updateMany(
                 { 'MtNr': Number(mtNr) },
                 { $set: { 'isSubmitted': true } }, { upsert: true, new: true }
             );
