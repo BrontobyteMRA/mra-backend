@@ -84,6 +84,10 @@ const meterReadingSchema = new mongoose.Schema({
     Consumption: {
         type: Number,
         required: true
+    },
+    isSubmitted: {
+        type: Boolean,
+        required: false
     }
 });
 
@@ -170,7 +174,7 @@ app.post('/api/submitReadings', async (req, res) => {
         if (account) {
             const result = await MeterReading.findOneAndUpdate(
                 { 'MtNr': Number(mtNr) },
-                { $set: { 'isSubmitted': true } }, { new: true }
+                { $set: { 'isSubmitted': true } }, { upsert: true, new: true }
             );
             return res.status(200).json({ success: result ? true : false });
         } else {
