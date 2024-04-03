@@ -5,6 +5,9 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const { Schema } = mongoose;
 const { Types } = require('mongoose');
+const User = require('./schemas/user.schema'); // Import the user schema from userModel.js
+const MeterReading = require('./schemas/meterreading.schema');
+const { checkRole } = require('./middleware/role.middleware');
 
 
 const Size = global.Size;
@@ -27,72 +30,29 @@ app.listen(PORT, () => {
 });
 
 
-const meterReadingSchema = new mongoose.Schema({
-    Routes: {
-        type: String,
-        required: true
-    },
-    AccNr: {
-        type: Number,
-        required: true
-    },
-    MetType: {
-        type: String,
-        enum: ['ME01', 'ME03'],
-        required: true
-    },
-    SeqNo: {
-        type: Number,
-        required: true
-    },
-    MtNr: {
-        type: Number,
-        required: true
-    },
-    CurrRead: {
-        type: Number,
-        required: true
-    },
-    PrevRead: {
-        type: Number,
-        required: true
-    },
-    AccName: {
-        type: String,
-        required: true
-    },
-    Address: {
-        type: String,
-        required: true
-    },
-    PreDec: {
-        type: Number,
-        required: true
-    },
-    PostDec: {
-        type: Number,
-        required: true
-    },
-    BillFactor: {
-        type: Number,
-        required: true
-    },
-    Resettable: {
-        type: Boolean,
-        required: false
-    },
-    Consumption: {
-        type: Number,
-        required: true
-    },
-    isSubmitted: {
-        type: Boolean,
-        required: false
+// const MeterReading = mongoose.model('meterreading', meterReadingSchema);
+// const User = mongoose.model('user', userSchema);
+
+app.post('/api/login', async (req, res) => {
+    const { username, password } = req.body;
+    const user = await User.findOne({ 'username': username, 'password': password });
+    if (!user) {
+        return res.status(401).send('Invalid credentials');
     }
+    res.json({ message: 'Login successful', user });
 });
 
-const MeterReading = mongoose.model('meterreading', meterReadingSchema);
-
+app.post('/api/signup', async (req, res) => {
+    const { username, password, role } = req.body;
+    try {
+        // const newUser = await User.create({ Username: username, Password: password, Role: role });
+        const newUser = await User.create({ username, password, role });
+        res.status(201).json(newUser);
+    } catch (err) {
+        console.log(err);
+        res.status(400).send('Error creating user');
+    }
+});
 
 app.get('/api/getAllRoutes', async (req, res) => {
     try {
@@ -213,4 +173,16 @@ app.post('/api/submitReadings', async (req, res) => {
         console.error('Error getting accounts:', error);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
+});
+
+app.get('/api/admin', checkRole('Admin'), (req, res) => {
+    res.send(`Welcome ${req.user.role}: ${req.user.username}`);
+});
+
+app.get('/api/vendor', checkRole('Vendor'), (req, res) => {
+    res.send(`Welcome ${req.user.role}: ${req.user.username}`);
+});
+
+app.get('/api/user', checkRole('User'), (req, res) => {
+    res.send(`Welcome ${req.user.role}: ${req.user.username}`);
 });
