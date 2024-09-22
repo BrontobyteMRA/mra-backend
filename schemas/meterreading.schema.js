@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
 
-const meterReadingSchema = new mongoose.Schema({
+const meterReadingSchema = new Schema({
     Routes: {
         type: String,
         required: true
@@ -65,4 +65,4 @@ const meterReadingSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('meterreading', meterReadingSchema);
+export default model('meterreading', meterReadingSchema);
